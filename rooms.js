@@ -1,34 +1,38 @@
 'use strict'
 
 module.exports = class Rooms {
-  constructor() {
+  constructor(ws) {
     this.maxClient = 2
     this.rooms = {}
+    this.ws = ws
   }
 
   display() {
-    console.log(this.maxClient + ' ' + this.rooms)
+    console.log(this.maxClient + ' ' + JSON.stringify(this.rooms) + " " + JSON.stringify(this.ws))
   }
 
-  generalInformation(ws) {
+  generalInformation() {
     let obj
-    if (ws['room'] === undefined)
+    console.log(this.ws['room']);
+    if (this.ws['room'] !== undefined) {
       obj = {
         type: 'info',
         params: {
-          room: ws['room'],
-          'no-clients': this.rooms[ws['room']].length,
+          room: this.ws['room'],
+          clients: this.rooms[this.ws['room']]?.length,
         },
       }
-    else
+      }
+    else {
       obj = {
         type: 'info',
         params: {
           room: 'no room',
         },
       }
+    }
 
-    ws.send(JSON.stringify(obj))
+    this.ws.send(JSON.stringify(obj))
   }
 
   genKey(length) {
@@ -40,39 +44,39 @@ module.exports = class Rooms {
     return result
   }
 
-  create(params, ws) {
-    const room = genKey(5)
-    this.rooms[room] = [ws]
-    ws['room'] = room
+  create() {
+    const room = this.genKey(5)
+    this.rooms[room] = [this.ws]
+    this.ws['room'] = room
 
-    this.generalInformation(ws)
+    this.generalInformation(this.ws)
   }
   join(params) {
     const room = params.code
-    if (!Object.keys(this.rooms).includes(room)) {
+    if (!Object.keys(this.rooms)?.includes(room)) {
       console.warn(`Room ${room} does not exist!`)
       return
     }
 
-    if (this.rooms[room].length >= this.maxClients) {
+    if (this.rooms[room]?.length >= this.maxClients) {
       console.warn(`Room ${room} is full!`)
       return
     }
 
-    this.rooms[room].push(ws)
-    ws['room'] = room
+    this.rooms[room].push(this.ws)
+    this.ws['room'] = room
 
-    this.generalInformation(ws)
+    this.generalInformation(this.ws)
   }
-  leave(params, ws) {
-    const room = ws.room
-    this.rooms[room] = this.rooms[room].filter((so) => so !== ws)
-    ws['room'] = undefined
+  leave() {
+    const room = this.ws.room
+    this.rooms[room] = this.rooms[room]?.filter((so) => so !== this.ws)
+    this.ws['room'] = undefined
 
-    if (this.rooms[room].length == 0) this.close(room)
+    if (this.rooms[room]?.length == 0) this.close(room)
   }
 
   close(room) {
-    this.rooms = this.rooms.filter((key) => key !== room)
+    this.rooms = this.rooms?.filter((key) => key !== room)
   }
 }

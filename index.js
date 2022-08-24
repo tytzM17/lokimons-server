@@ -2,7 +2,6 @@ const WebSocket = require("ws");
 const Rooms = require('./rooms.js')
 
 const wss = new WebSocket.Server({ port: 40510 });
-const rooms = new Rooms();
 
 wss.getUniqueID = function () {
     function s4() {
@@ -24,6 +23,7 @@ wss.on("connection", ws => {
         });
 
         // room
+        const rooms = new Rooms(ws);
         const obj = JSON.parse(data);
         const type = obj.type;
         const params = obj.params;
@@ -32,13 +32,13 @@ wss.on("connection", ws => {
 
         switch (type) {
           case "create":
-            rooms.create(params);
+            rooms.create();
             break;
           case "join":
             rooms.join(params);
             break;
           case "leave":
-            rooms.leave(params);
+            rooms.leave();
             break;    
           default:
               console.warn(`Type: ${type} unknown`);
