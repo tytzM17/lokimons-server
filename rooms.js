@@ -7,13 +7,13 @@ module.exports = class Rooms {
     this.ws = ws
   }
 
-  display() {
-    console.log(this.maxClient + ' ' + JSON.stringify(this.rooms) + " " + JSON.stringify(this.ws))
+  display(note='Init', rooms=this.rooms) {
+    const theRooms = JSON.stringify(Object.keys(rooms))
+    console.log(note + ' maxClient:' + this.maxClient + ' Room(s): ' + theRooms)
   }
 
   generalInformation() {
     let obj
-    console.log(this.ws['room']);
     if (this.ws['room'] !== undefined) {
       obj = {
         type: 'info',
@@ -50,6 +50,7 @@ module.exports = class Rooms {
     this.ws['room'] = room
 
     this.generalInformation(this.ws)
+    this.display('Create room', this.rooms)
   }
   join(params) {
     const room = params.code
