@@ -1,37 +1,32 @@
 'use strict'
 
 module.exports = class Rooms {
-  constructor(ws) {
+  constructor() {
     this.maxClient = 2
     this.rooms = {}
   }
 
-  display(note='Init') {
-    const theRooms = JSON.stringify(Object.keys(this.rooms))
-    console.log(note + ' maxClient:' + this.maxClient + ' Room(s): ' + theRooms)
-  }
-
-  generalInformation() {
+  generalInformation(ws, sendFunc, funcType='info') {
     let obj
     if (ws['room'] !== undefined) {
       obj = {
-        type: 'info',
+        type: funcType,
         params: {
           room: ws['room'],
           clients: this.rooms[ws['room']]?.length,
+          creator: ws['creator'],
         },
       }
-      }
-    else {
+    } else {
       obj = {
-        type: 'info',
+        type: funcType,
         params: {
           room: 'no room',
         },
       }
     }
 
-    ws.send(JSON.stringify(obj))
+    sendFunc ? sendFunc(ws, JSON.stringify(obj)) : ws.send(JSON.stringify(obj))
   }
 
   genKey(length) {
@@ -43,15 +38,27 @@ module.exports = class Rooms {
     return result
   }
 
-  create(ws) {
+  getRooms() {
+    return this.rooms
+  }
+
+  create(ws, creator, sendFunc) {
+    if (!ws) {
+      ws.send(JSON.stringify({ type: 'info', msg: 'error, no ws'}))
+      return
+    }
     const room = this.genKey(5)
     this.rooms[room] = [ws]
     ws['room'] = room
+    ws['creator'] = creator
 
-    this.generalInformation(ws)
-    this.display('Create room', this.rooms)
+    this.generalInformation(ws, sendFunc, 'create')
   }
-  join(params, ws) {
+  join(ws, params, sendFunc) {
+    if (!ws) {
+      ws.send(JSON.stringify({ type: 'info', msg: 'error, no ws'}))
+      return
+    }
     const room = params.code
     if (!Object.keys(this.rooms)?.includes(room)) {
       console.warn(`Room ${room} does not exist!`)
@@ -65,10 +72,13 @@ module.exports = class Rooms {
 
     this.rooms[room].push(ws)
     ws['room'] = room
-
-    this.generalInformation(ws)
+    this.generalInformation(ws, sendFunc, 'join')
   }
   leave(ws) {
+    if (!ws) {
+      ws.send(JSON.stringify({ type: 'info', msg: 'error, no ws'}))
+      return
+    }
     const room = ws.room
     this.rooms[room] = this.rooms[room]?.filter((so) => so !== ws)
     ws['room'] = undefined
