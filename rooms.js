@@ -4,22 +4,21 @@ module.exports = class Rooms {
   constructor(ws) {
     this.maxClient = 2
     this.rooms = {}
-    this.ws = ws
   }
 
-  display(note='Init', rooms=this.rooms) {
-    const theRooms = JSON.stringify(Object.keys(rooms))
+  display(note='Init') {
+    const theRooms = JSON.stringify(Object.keys(this.rooms))
     console.log(note + ' maxClient:' + this.maxClient + ' Room(s): ' + theRooms)
   }
 
   generalInformation() {
     let obj
-    if (this.ws['room'] !== undefined) {
+    if (ws['room'] !== undefined) {
       obj = {
         type: 'info',
         params: {
-          room: this.ws['room'],
-          clients: this.rooms[this.ws['room']]?.length,
+          room: ws['room'],
+          clients: this.rooms[ws['room']]?.length,
         },
       }
       }
@@ -32,7 +31,7 @@ module.exports = class Rooms {
       }
     }
 
-    this.ws.send(JSON.stringify(obj))
+    ws.send(JSON.stringify(obj))
   }
 
   genKey(length) {
@@ -44,15 +43,15 @@ module.exports = class Rooms {
     return result
   }
 
-  create() {
+  create(ws) {
     const room = this.genKey(5)
-    this.rooms[room] = [this.ws]
-    this.ws['room'] = room
+    this.rooms[room] = [ws]
+    ws['room'] = room
 
-    this.generalInformation(this.ws)
+    this.generalInformation(ws)
     this.display('Create room', this.rooms)
   }
-  join(params) {
+  join(params, ws) {
     const room = params.code
     if (!Object.keys(this.rooms)?.includes(room)) {
       console.warn(`Room ${room} does not exist!`)
@@ -64,15 +63,15 @@ module.exports = class Rooms {
       return
     }
 
-    this.rooms[room].push(this.ws)
-    this.ws['room'] = room
+    this.rooms[room].push(ws)
+    ws['room'] = room
 
-    this.generalInformation(this.ws)
+    this.generalInformation(ws)
   }
-  leave() {
-    const room = this.ws.room
-    this.rooms[room] = this.rooms[room]?.filter((so) => so !== this.ws)
-    this.ws['room'] = undefined
+  leave(ws) {
+    const room = ws.room
+    this.rooms[room] = this.rooms[room]?.filter((so) => so !== ws)
+    ws['room'] = undefined
 
     if (this.rooms[room]?.length == 0) this.close(room)
   }

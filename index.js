@@ -12,31 +12,22 @@ wss.getUniqueID = function () {
   return s4() + s4() + '-' + s4()
 }
 
+const rooms = new Rooms()
 let totalOnline = {}
 
 wss.on('connection', (ws) => {
   ws.id = wss.getUniqueID()
-  // console.log(`New client connected with id: ${ws.id}`)
-  // console.log('clients size:', wss.clients.size);
   console.log('total online', Object.keys(totalOnline).length);
 
   ws.onmessage = ({ data }) => {
     // chat
     wss.clients.forEach(function each(client) {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
-        // console.log('client', client);
-        console.log('data', data);
         client.send(data)
-        // const parsedData = JSON.parse(data)
-        // parsedData?.type === 'chat' ? totalOnline[parsedData.acct]=parsedData?.msg : null
-        // console.log('online', JSON.stringify(totalOnline));
-        // parsedData['online'] = Object.keys(totalOnline).length
-        // client.send(JSON.stringify(parsedData))
       }
     })
 
     // room
-    const rooms = new Rooms(ws)
     const obj = JSON.parse(data)
     const type = obj.type
     const params = obj.params
@@ -45,30 +36,34 @@ wss.on('connection', (ws) => {
 
     switch (type) {
       case 'create':
-        rooms.create()
+        rooms.create(ws)
         break
       case 'join':
-        rooms.join(params)
+        rooms.join(params, ws)
         break
       case 'leave':
-        rooms.leave()
+        rooms.leave(ws)
         break
       case 'online':
         obj?.acct ? totalOnline[obj.acct]=obj?.msg : null
-        const onlineObj = {...obj}
-        onlineObj['online'] = Object.keys(totalOnline).length
-        console.log('online', JSON.stringify(totalOnline));
-        wss.clients.forEach(function each(client) {
-          if (client !== ws && client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(onlineObj))
-          }
-        })
         break
       default:
         console.warn(`Type: ${type} unknown`)
         break
     }
   }
+
+  const onlineObj = {
+    type: 'online',
+    online: Object.keys(totalOnline).length
+  } 
+  wss.clients.forEach(function each(client) {
+    if (client !== ws && client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(onlineObj))
+    }
+  })
+
+
 
   ws.onclose = function () {
     console.log(`Client ${ws.id} has disconnected!`)
