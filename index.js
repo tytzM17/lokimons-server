@@ -47,7 +47,7 @@ wss.on('connection', (ws) => {
         rooms.join(ws, params, sendToAllIncludeSender)
         break
       case 'leave':
-        rooms.leave(ws)
+        rooms.leave(ws, params, sendToAllIncludeSender)
         break
       case 'chat':
         sendToAllExceptSender(ws, data)

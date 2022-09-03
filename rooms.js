@@ -6,20 +6,21 @@ module.exports = class Rooms {
     this.rooms = {}
   }
 
-  generalInformation(ws, sendFunc, funcType='info') {
+  generalInformation(ws, sendFunc, msg) {
     let obj
     if (ws['room'] !== undefined) {
       obj = {
-        type: funcType,
+        type: 'info',
         params: {
           room: ws['room'],
           clients: this.rooms[ws['room']]?.length,
-          creator: ws['creator'],
+          msg
         },
       }
-    } else {
+    } 
+    else {
       obj = {
-        type: funcType,
+        type: 'info',
         params: {
           room: 'no room',
         },
@@ -50,10 +51,23 @@ module.exports = class Rooms {
     const room = this.genKey(5)
     this.rooms[room] = [ws]
     ws['room'] = room
-    ws['creator'] = creator
 
-    this.generalInformation(ws, sendFunc, 'create')
+    // this.generalInformation(ws, sendFunc, 'create')
+
+    let obj = {
+      type: 'create',
+      params: {
+        room,
+        clients: this.rooms[room]?.length,
+        isClosed: false,
+        players: [creator],
+        creator,
+      },
+    }
+
+    sendFunc(ws, JSON.stringify(obj))
   }
+
   join(ws, params, sendFunc) {
     if (!ws) {
       ws.send(JSON.stringify({ type: 'info', msg: 'error, no ws'}))
@@ -62,19 +76,37 @@ module.exports = class Rooms {
     const room = params.code
     if (!Object.keys(this.rooms)?.includes(room)) {
       console.warn(`Room ${room} does not exist!`)
+      this.generalInformation(ws, null, `Room ${room} does not exist!`)
       return
     }
 
-    if (this.rooms[room]?.length >= this.maxClients) {
+    if (this.rooms[room]?.length >= this.maxClient) {
       console.warn(`Room ${room} is full!`)
+      this.generalInformation(ws, null, `Room ${room} is full!`)
       return
     }
 
     this.rooms[room].push(ws)
     ws['room'] = room
-    this.generalInformation(ws, sendFunc, 'join')
+    // this.generalInformation(ws, sendFunc, 'join')
+    // room: ws['room'],
+    // clients: this.rooms[ws['room']]?.length,
+    // creator: ws['creator'],
+    let players = [ params?.creator, params?.player ]
+    let obj = {
+      type: 'join',
+      params: {
+        room,
+        clients: this.rooms[room]?.length,
+        isClosed: false,
+        players,
+        creator: params?.creator,
+      },
+    }
+
+    sendFunc(ws, JSON.stringify(obj))
   }
-  leave(ws) {
+  leave(ws, params, sendFunc) {
     if (!ws) {
       ws.send(JSON.stringify({ type: 'info', msg: 'error, no ws'}))
       return
@@ -83,10 +115,28 @@ module.exports = class Rooms {
     this.rooms[room] = this.rooms[room]?.filter((so) => so !== ws)
     ws['room'] = undefined
 
-    if (this.rooms[room]?.length == 0) this.close(room)
+    let isClosed = false
+
+    if (this.rooms[room]?.length == 0 || params.isCreator) {
+      this.close(room)
+      isClosed = true
+    }
+
+    const remainingPlayer = params?.players?.filter(player => player !== params.leaver)
+    let obj = {
+      type: 'leave',
+      params: {
+        room,
+        clients: this.rooms[room]?.length,
+        isClosed,
+        players: isClosed ? [] : remainingPlayer
+      },
+    }
+
+    sendFunc(ws, JSON.stringify(obj))
   }
 
   close(room) {
-    this.rooms = this.rooms?.filter((key) => key !== room)
+    this.rooms = this.rooms[room]?.filter((key) => key !== room)
   }
 }
