@@ -1,6 +1,6 @@
 const WebSocket = require('ws')
 const Rooms = require('./rooms.js')
-var util = require('util')
+// var util = require('util')
 
 const wss = new WebSocket.Server({ port: 40510 })
 
@@ -23,7 +23,7 @@ const sendToAllExceptSender = (ws, data) => {
     }
   })
 }
-const sendToAllIncludeSender = (ws, data) => {
+const sendToAllIncludeSender = (data) => {
   wss.clients.forEach(function each(client) {
     if (client.readyState === WebSocket.OPEN) {
       client.send(data)
@@ -38,8 +38,16 @@ wss.on('connection', (ws) => {
     const obj = JSON.parse(data)
     const type = obj.type
     const params = obj.params
+    const _rooms = rooms.getRooms()
 
     switch (type) {
+      case 'get_rooms':
+        const getRoomsObj = {
+          type: 'get_rooms',
+          rooms: _rooms,
+        }
+        sendToAllIncludeSender(JSON.stringify(getRoomsObj))
+        break
       case 'create':
         rooms.create(ws, params.creator, sendToAllIncludeSender)
         break
@@ -58,21 +66,25 @@ wss.on('connection', (ws) => {
         }
         const onlineObj = {
           type: 'online',
-          online: Object.keys(totalOnline).length,
-          data: totalOnline,
+          online: Object.keys(totalOnline)?.length,
         }
-        sendToAllIncludeSender(ws, JSON.stringify(onlineObj))
-        // ws.send(JSON.stringify(onlineObj))
+        sendToAllIncludeSender(JSON.stringify(onlineObj))
         break
       case 'start':
-        const _rooms = rooms.getRooms()
         // console.log(util.inspect(_rooms[params?.code]));
         const startObj = {
           type: 'start',
-          data: 'prepare yourselves!',
+          params,
         }
-        _rooms[params.code]?.forEach(cl => cl.send(JSON.stringify(startObj)));
+        _rooms[params?.room?.room]?.forEach(cl => cl.send(JSON.stringify(startObj)));
         break
+        case 'ready':
+          const readyObj = {
+            type: 'ready',
+            params,
+          }
+          _rooms[params?.room?.room]?.forEach(cl => cl.send(JSON.stringify(readyObj)));
+          break
       default:
         console.warn(`Type: ${type} unknown`)
         break

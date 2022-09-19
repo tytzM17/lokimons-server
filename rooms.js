@@ -62,7 +62,7 @@ module.exports = class Rooms {
       },
     }
 
-    sendFunc(ws, JSON.stringify(obj))
+    sendFunc(JSON.stringify(obj))
   }
 
   join(ws, params, sendFunc) {
@@ -98,7 +98,7 @@ module.exports = class Rooms {
       },
     }
 
-    sendFunc(ws, JSON.stringify(obj))
+    sendFunc(JSON.stringify(obj))
   }
   leave(ws, params, sendFunc) {
     if (!ws) {
@@ -131,7 +131,7 @@ module.exports = class Rooms {
       },
     }
 
-    sendFunc(ws, JSON.stringify(obj))
+    sendFunc(JSON.stringify(obj))
   }
 
   close(room) {
