@@ -1,6 +1,6 @@
 'use strict'
 
-module.exports = class Rooms {
+export default class Rooms {
   constructor() {
     this.maxClient = 2
     this.rooms = {}
@@ -51,7 +51,7 @@ module.exports = class Rooms {
     this.rooms[room] = [ws]
     ws['room'] = room
 
-    let obj = {
+    const obj = {
       type: 'create',
       params: {
         room,
@@ -61,6 +61,8 @@ module.exports = class Rooms {
         creator,
       },
     }
+
+    ws['params'] = obj.params
 
     sendFunc(JSON.stringify(obj))
   }
@@ -100,6 +102,7 @@ module.exports = class Rooms {
 
     sendFunc(JSON.stringify(obj))
   }
+
   leave(ws, params, sendFunc) {
     if (!ws) {
       ws.send(JSON.stringify({ type: 'info', msg: 'error, no ws' }))
