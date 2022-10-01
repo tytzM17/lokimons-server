@@ -1,13 +1,32 @@
 'use strict'
 
+import { AnyFunc, JoinParams, LeaveParams, Room, WsSendFunc } from './model'
+
+/**
+ * Class representing rooms
+ */
 export default class Rooms {
+  maxClient: number
+  rooms: Room
+
+  /**
+   * Create or delete rooms
+   */
   constructor() {
     this.maxClient = 2
-    this.rooms = {}
+    this.rooms = null
   }
 
-  generalInformation(ws, sendFunc, msg) {
-    let obj
+  /**
+   * Show rooms info
+   *
+   * @param  {WebSocket} ws
+   * @param  {AnyFunc} sendFunc
+   * @param  {string} msg
+   * @returns void
+   */
+  generalInformation(ws: WebSocket, sendFunc: AnyFunc, msg: string): void {
+    let obj: object
     if (ws['room'] !== undefined) {
       obj = {
         type: 'info',
@@ -29,7 +48,13 @@ export default class Rooms {
     sendFunc ? sendFunc(ws, JSON.stringify(obj)) : ws.send(JSON.stringify(obj))
   }
 
-  genKey(length) {
+  /**
+   * Generate key or code for a room
+   *
+   * @param  {number} length
+   * @returns {string} key or code
+   */
+  genKey(length: number): string {
     let result = ''
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
     for (let i = 0; i < length; i++) {
@@ -38,11 +63,23 @@ export default class Rooms {
     return result
   }
 
-  getRooms() {
+  /**
+   * Get rooms value
+   * @return {Room} the rooms value
+   */
+  getRooms(): Room {
     return this.rooms
   }
 
-  create(ws, creator, sendFunc) {
+  /**
+   * Create a room
+   *
+   * @param  {WebSocket} ws
+   * @param  {string} creator
+   * @param  {WsSendFunc} sendFunc
+   * @returns void
+   */
+  create(ws: WebSocket, creator: string, sendFunc: WsSendFunc): void {
     if (!ws) {
       ws.send(JSON.stringify({ type: 'info', msg: 'error, no ws' }))
       return
@@ -67,7 +104,14 @@ export default class Rooms {
     sendFunc(JSON.stringify(obj))
   }
 
-  join(ws, params, sendFunc) {
+  /**
+   * Joins a room
+   * @param  {WebSocket} ws
+   * @param  {JoinParams} params
+   * @param  {WsSendFunc} sendFunc
+   * @returns void
+   */
+  join(ws: WebSocket, params: JoinParams, sendFunc: WsSendFunc): void {
     if (!ws) {
       ws.send(JSON.stringify({ type: 'info', msg: 'error, no ws' }))
       return
@@ -88,8 +132,8 @@ export default class Rooms {
     this.rooms[room].push(ws)
     ws['room'] = room
 
-    let players = [params?.creator, params?.player]
-    let obj = {
+    const players = [params?.creator, params?.player]
+    const obj = {
       type: 'join',
       params: {
         room,
@@ -103,14 +147,22 @@ export default class Rooms {
     sendFunc(JSON.stringify(obj))
   }
 
-  leave(ws, params, sendFunc) {
+  /**
+   * Leaves a room
+   *
+   * @param  {WebSocket} ws
+   * @param  {LeaveParams} params
+   * @param  {WsSendFunc} sendFunc
+   * @returns void
+   */
+  leave(ws: WebSocket, params: LeaveParams, sendFunc: WsSendFunc): void {
     if (!ws) {
       ws.send(JSON.stringify({ type: 'info', msg: 'error, no ws' }))
       return
     }
     // const room = ws.room
     const room = params?.code
-    this.rooms[room] = this.rooms[room]?.filter((so) => so !== ws)
+    this.rooms[room] = this.rooms[room]?.filter((so: WebSocket) => so !== ws)
     ws['room'] = undefined
 
     let isClosed = false
@@ -123,12 +175,11 @@ export default class Rooms {
     const remainingPlayer = params?.players?.filter(
       (player) => player !== params.leaver,
     )
-    let obj = {
+    const obj = {
       type: 'leave',
       params: {
         room,
-        clients:
-          this.rooms || this.rooms?.length ? this.rooms[room]?.length : 0,
+        clients: this.rooms && this.rooms[room] ? this.rooms[room]?.length : 0,
         isClosed,
         players: isClosed ? [] : remainingPlayer,
       },
@@ -136,8 +187,11 @@ export default class Rooms {
 
     sendFunc(JSON.stringify(obj))
   }
-
-  close(room) {
+  /**
+   * @param  {string} room
+   * @returns void
+   */
+  close(room: string): void {
     if (this.rooms) {
       delete this.rooms[room]
     }

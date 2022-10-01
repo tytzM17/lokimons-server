@@ -1,9 +1,11 @@
 import { Server, OPEN } from 'ws'
+import { WsGame } from './model.js'
 import Rooms from './rooms.js'
 
-const wss = new Server({ port: 40510 })
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const wss: any = new Server({ port: 40510 })
 
-wss.getUniqueID = function () {
+wss.getUniqueID = function (): string {
   function s4() {
     return Math.floor((1 + Math.random()) * 0x10000)
       .toString(16)
@@ -13,28 +15,42 @@ wss.getUniqueID = function () {
 }
 
 const rooms = new Rooms()
-let totalOnline = {}
+const totalOnline = {}
 
-const sendToAllExceptSender = (ws, data) => {
-  wss.clients.forEach(function each(client) {
+/**
+ * Sends data to all connected sockets except the sender
+ *
+ * @param  {WebSocket} ws
+ * @param  {string} data
+ * @returns void
+ */
+const sendToAllExceptSender = (ws: WebSocket, data: string): void => {
+  wss.clients.forEach(function each(client: WebSocket) {
     if (client !== ws && client.readyState === OPEN) {
       client.send(data)
     }
   })
 }
-const sendToAllIncludeSender = (data) => {
-  wss.clients.forEach(function each(client) {
+
+/**
+ * Sends data to all connected sockets
+ *
+ * @param  {string} data
+ * @returns void
+ */
+const sendToAllIncludeSender = (data: string): void => {
+  wss.clients.forEach(function each(client: WebSocket) {
     if (client.readyState === OPEN) {
       client.send(data)
     }
   })
 }
 
-wss.on('connection', (ws) => {
-  ws.id = wss.getUniqueID()
+wss.on('connection', (ws: WsGame) => {
+  ws['id'] = wss.getUniqueID()
 
   ws.onmessage = ({ data }) => {
-    const obj = JSON.parse(data)
+    const obj = JSON.parse(data as string)
     const type = obj.type
     const params = obj.params
     const _rooms = rooms.getRooms()
@@ -87,12 +103,12 @@ wss.on('connection', (ws) => {
         sendToAllIncludeSender(JSON.stringify(onlineObj))
         break
       case 'start':
-        _rooms[params?.room?.room]?.forEach((cl) =>
+        _rooms[params?.room?.room]?.forEach((cl: WsGame) =>
           cl.send(JSON.stringify(startObj)),
         )
         break
       case 'ready':
-        _rooms[params?.room?.room]?.forEach((cl) =>
+        _rooms[params?.room?.room]?.forEach((cl: WsGame) =>
           cl.send(JSON.stringify(readyObj)),
         )
         break
