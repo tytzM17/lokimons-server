@@ -1,9 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+interface AllRooms {
+  room?: WebSocket[]
+  // players?: string[]
+  // creator?: string
+  // clients?: number
+}
+
 interface Room {
-  room: string
-  players: string[]
-  creator: string
-  clients: number
+  room?: string
+  players?: string[]
+  creator?: string
+  clients?: number
 }
 
 interface JoinParams {
@@ -19,7 +26,7 @@ interface LeaveParams {
   code: string
 }
 
-interface CreateParamsSend {
+interface CreateSendParams {
   room: string
   clients: number
   isClosed: boolean
@@ -30,7 +37,7 @@ interface CreateParamsSend {
 interface WsGame extends WebSocket {
   id: string
   room: string
-  params: JoinParams | LeaveParams | CreateParamsSend
+  params: JoinParams | LeaveParams | CreateSendParams
 }
 
 export type AnyFunc = (...args: any[]) => any
@@ -41,4 +48,4 @@ export type WsSendFunc = (
   data: string | ArrayBufferLike | Blob | ArrayBufferView,
 ) => void
 
-export type { Room, JoinParams, LeaveParams, WsGame }
+export type { Room, AllRooms, JoinParams, LeaveParams, WsGame }

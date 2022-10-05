@@ -1,20 +1,20 @@
 'use strict'
 
-import { AnyFunc, JoinParams, LeaveParams, Room, WsSendFunc } from './model'
+import { AnyFunc, JoinParams, LeaveParams, Room, AllRooms, WsSendFunc, WsGame } from './model'
 
 /**
  * Class representing rooms
  */
 export default class Rooms {
   maxClient: number
-  rooms: Room
+  rooms: AllRooms
 
   /**
    * Create or delete rooms
    */
   constructor() {
     this.maxClient = 2
-    this.rooms = null
+    this.rooms = {}
   }
 
   /**
@@ -65,9 +65,9 @@ export default class Rooms {
 
   /**
    * Get rooms value
-   * @return {Room} the rooms value
+   * @return {AllRooms} the rooms value
    */
-  getRooms(): Room {
+  getRooms(): AllRooms {
     return this.rooms
   }
 
@@ -185,7 +185,10 @@ export default class Rooms {
       },
     }
 
-    sendFunc(JSON.stringify(obj))
+     sendFunc(JSON.stringify(obj))
+    // this.rooms[room]?.forEach((client) => {
+    //   client.send(JSON.stringify(obj))
+    // })
   }
   /**
    * @param  {string} room

@@ -103,13 +103,13 @@ wss.on('connection', (ws: WsGame) => {
         sendToAllIncludeSender(JSON.stringify(onlineObj))
         break
       case 'start':
-        _rooms[params?.room?.room]?.forEach((cl: WsGame) =>
-          cl.send(JSON.stringify(startObj)),
+        _rooms[params?.room?.room]?.forEach((client: WsGame) =>
+          client.send(JSON.stringify(startObj)),
         )
         break
       case 'ready':
-        _rooms[params?.room?.room]?.forEach((cl: WsGame) =>
-          cl.send(JSON.stringify(readyObj)),
+        _rooms[params?.room?.room]?.forEach((client: WsGame) =>
+          client.send(JSON.stringify(readyObj)),
         )
         break
       default:
