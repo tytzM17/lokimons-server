@@ -166,9 +166,6 @@ class Rooms {
             },
         };
         sendFunc(JSON.stringify(obj));
-        // this.rooms[room]?.forEach((client) => {
-        //   client.send(JSON.stringify(obj))
-        // })
     }
     /**
      * @param  {string} room
