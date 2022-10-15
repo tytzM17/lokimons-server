@@ -3,7 +3,6 @@ interface AllRooms {
   room?: WebSocket[]
   // players?: string[]
   // creator?: string
-  // clients?: number
 }
 
 interface Room {
