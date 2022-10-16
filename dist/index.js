@@ -55,7 +55,7 @@ wss.on('connection', (ws) => {
         // get rooms
         const getRoomsObj = {
             type: 'get_rooms',
-            rooms: _rooms,
+            allRooms: _rooms,
         };
         // online
         const onlineObj = {

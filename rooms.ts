@@ -96,7 +96,9 @@ export default class Rooms {
         isClosed: false,
         players: [creator],
         creator,
+       
       },
+      allRooms: this.getRooms(),
     }
 
     ws['params'] = obj.params
@@ -141,8 +143,11 @@ export default class Rooms {
         isClosed: false,
         players,
         creator: params?.creator,
-      },
+       
+      },    
     }
+
+    ws['joinParams'] = obj.params
 
     sendFunc(JSON.stringify(obj))
   }
@@ -182,7 +187,9 @@ export default class Rooms {
         clients: this.rooms && this.rooms[room] ? this.rooms[room]?.length : 0,
         isClosed,
         players: isClosed ? [] : remainingPlayer,
+        leaver: params?.leaver,
       },
+      allRooms: this.getRooms()
     }
 
      sendFunc(JSON.stringify(obj))
