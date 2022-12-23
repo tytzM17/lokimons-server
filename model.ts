@@ -24,6 +24,7 @@ interface LeaveParams {
   isCreator: boolean
   leaver: string
   code: string
+  creator: string
 }
 
 interface CreateSendParams {

@@ -1,6 +1,6 @@
 'use strict'
 
-import { AnyFunc, JoinParams, LeaveParams, Room, AllRooms, WsSendFunc, WsGame } from './model'
+import { AnyFunc, JoinParams, LeaveParams, AllRooms, WsSendFunc } from './model'
 
 /**
  * Class representing rooms
@@ -143,11 +143,11 @@ export default class Rooms {
         isClosed: false,
         players,
         creator: params?.creator,
-       
       },    
+      allRooms: this.getRooms(),
     }
 
-    ws['joinParams'] = obj.params
+    ws['params'] = obj.params
 
     sendFunc(JSON.stringify(obj))
   }
@@ -188,6 +188,7 @@ export default class Rooms {
         isClosed,
         players: isClosed ? [] : remainingPlayer,
         leaver: params?.leaver,
+        creator: params?.creator,
       },
       allRooms: this.getRooms()
     }

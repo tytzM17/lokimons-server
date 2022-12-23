@@ -1,4 +1,5 @@
 import { Server, OPEN } from 'ws'
+import Fight from './fight.js'
 import { WsGame } from './model.js'
 import Rooms from './rooms.js'
 
@@ -108,9 +109,25 @@ wss.on('connection', (ws: WsGame) => {
         )
         break
       case 'ready':
+        _rooms[params?.room?.room]['fight'] = new Fight()
+
+        _rooms[params?.room?.room].fight.setPlayers(params)
+
         _rooms[params?.room?.room]?.forEach((client: WsGame) =>
           client.send(JSON.stringify(readyObj)),
         )
+        break
+      case 'fight':
+        // set creator as one of players
+        _rooms[params?.room?.room].fight.setPlayers(params)
+        _rooms[params?.room?.room].fight.call().then(() => {
+          const emitReward = _rooms[params?.room?.room].fight.emitReward()
+          // send
+          _rooms[params?.room?.room]?.forEach((client: WsGame) =>
+            client.send(JSON.stringify(emitReward)),
+          )
+        })
+
         break
       default:
         console.warn(`Type: ${type} unknown`)

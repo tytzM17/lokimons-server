@@ -88,8 +88,8 @@ class Rooms {
                 isClosed: false,
                 players: [creator],
                 creator,
-                // allRooms: this.getRooms(),
             },
+            allRooms: this.getRooms(),
         };
         ws['params'] = obj.params;
         sendFunc(JSON.stringify(obj));
@@ -130,8 +130,9 @@ class Rooms {
                 players,
                 creator: params === null || params === void 0 ? void 0 : params.creator,
             },
-            allRooms: this.getRooms()
+            allRooms: this.getRooms(),
         };
+        ws['params'] = obj.params;
         sendFunc(JSON.stringify(obj));
     }
     /**
@@ -166,6 +167,7 @@ class Rooms {
                 isClosed,
                 players: isClosed ? [] : remainingPlayer,
                 leaver: params === null || params === void 0 ? void 0 : params.leaver,
+                creator: params === null || params === void 0 ? void 0 : params.creator,
             },
             allRooms: this.getRooms()
         };
