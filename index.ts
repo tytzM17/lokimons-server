@@ -2,6 +2,7 @@ import { Server, OPEN } from 'ws'
 import Fight from './fight.js'
 import { WsGame } from './model.js'
 import Rooms from './rooms.js'
+import { isEmpty } from 'lodash';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const wss: any = new Server({ port: 40510 })
@@ -80,6 +81,10 @@ wss.on('connection', (ws: WsGame) => {
       params,
     }
 
+    let hasFilled = false
+
+    _rooms[params?.room?.room]['fight'] = new Fight()
+
     switch (type) {
       case 'get_rooms':
         sendToAllIncludeSender(JSON.stringify(getRoomsObj))
@@ -109,24 +114,52 @@ wss.on('connection', (ws: WsGame) => {
         )
         break
       case 'ready':
-        _rooms[params?.room?.room]['fight'] = new Fight()
+        // _rooms[params?.room?.room]['fight'] = new Fight()
+
+        console.log(_rooms[params?.room?.room]['fight']);
+        
 
         _rooms[params?.room?.room].fight.setPlayers(params)
+        console.log(_rooms[params?.room?.room]['fight']);
 
-        _rooms[params?.room?.room]?.forEach((client: WsGame) =>
-          client.send(JSON.stringify(readyObj)),
-        )
+
+        // check fight players has filled
+
+        _rooms[params?.room?.room].fight.players.every(player => {
+          if ( isEmpty (player) ) { 
+            hasFilled = false
+            return false 
+          }
+
+            hasFilled = true
+
+        return true
+    })
+
+    
+    if (hasFilled) {
+        _rooms[params?.room?.room]?.forEach((client: WsGame) => {
+          client.send(JSON.stringify(_rooms[params?.room?.room]?.fight?.players))
+        })
+      }
+
         break
       case 'fight':
-        // set creator as one of players
-        _rooms[params?.room?.room].fight.setPlayers(params)
-        _rooms[params?.room?.room].fight.call().then(() => {
-          const emitReward = _rooms[params?.room?.room].fight.emitReward()
-          // send
-          _rooms[params?.room?.room]?.forEach((client: WsGame) =>
-            client.send(JSON.stringify(emitReward)),
-          )
-        })
+        // // set creator as one of players
+        // _rooms[params?.room?.room].fight.setPlayers(params)
+        // _rooms[params?.room?.room].fight.call().then((results) => {
+        //   // const emitReward = _rooms[params?.room?.room].fight.emitReward()
+        //   // send
+        //   _rooms[params?.room?.room]?.forEach((client: WsGame) => {
+        //     console.log('fight start client', client)
+          
+        //     client.send(JSON.stringify(results))
+        //  })
+        // })
+
+        // get fight.players data
+        // send back to creator, then run fight on client side to call fight func in blockchain
+console.log('get fight.players data then run fight function')
 
         break
       default:
